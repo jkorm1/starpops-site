@@ -1,10 +1,12 @@
 // Central data system for Star Pops business portal
 export interface MonthlyData {
   month: string
+  year: number // Added year field for multi-year support
   revenue: number
   expenses: number
   profit: number
   daysActive: number
+  dateAdded: string // Added timestamp for when data was entered
 }
 
 export interface BusinessData {
@@ -68,10 +70,10 @@ export interface BusinessData {
 export const defaultBusinessData: BusinessData = {
   company: {
     name: "Star Pops",
-    email: "info@starpops.com",
-    phone: "+233 XX XXX XXXX",
+    email: "starpops001@gmail,com",
+    phone: "+233 53 365 2730",
     location: "KNUST, Kumasi",
-    mission: "To let the world truly feel the pops!",
+    mission: "feel the pops!",
   },
   financials: {
     summary: {
@@ -92,12 +94,36 @@ export const defaultBusinessData: BusinessData = {
       other: 4000, // Toppings, Stand, other expenses
     },
     monthlyData: [
-      { month: "February", revenue: 526, expenses: 1366, profit: -840, daysActive: 6 },
-      { month: "March", revenue: 552, expenses: 527, profit: 25, daysActive: 6 },
-      { month: "April", revenue: 1169, expenses: 0, profit: 1169, daysActive: 7 },
-      { month: "June", revenue: 4250, expenses: 2354, profit: 1896, daysActive: 22 },
-      { month: "July", revenue: 2425, expenses: 1482, profit: 943, daysActive: 9 },
-      { month: "August", revenue: 2450, expenses: 1314, profit: 1136, daysActive: 6 },
+      {
+        month: "February",
+        year: 2025,
+        revenue: 526,
+        expenses: 1366,
+        profit: -840,
+        daysActive: 6,
+        dateAdded: "2025-02-28",
+      },
+      { month: "March", year: 2025, revenue: 552, expenses: 527, profit: 25, daysActive: 6, dateAdded: "2025-03-31" },
+      { month: "April", year: 2025, revenue: 1169, expenses: 0, profit: 1169, daysActive: 7, dateAdded: "2025-04-30" },
+      {
+        month: "June",
+        year: 2025,
+        revenue: 4250,
+        expenses: 2354,
+        profit: 1896,
+        daysActive: 22,
+        dateAdded: "2025-06-30",
+      },
+      { month: "July", year: 2025, revenue: 2425, expenses: 1482, profit: 943, daysActive: 9, dateAdded: "2025-07-31" },
+      {
+        month: "August",
+        year: 2025,
+        revenue: 2450,
+        expenses: 1314,
+        profit: 1136,
+        daysActive: 6,
+        dateAdded: "2025-08-31",
+      },
     ],
   },
   operations: {
@@ -132,7 +158,7 @@ export const defaultBusinessData: BusinessData = {
     ],
   },
   investmentTerms: {
-    minimumInvestment: 5000,
+    minimumInvestment: 1000,
     valuationCap: 500000,
     discountRate: 20,
     fullTerms:
@@ -161,7 +187,102 @@ export const saveBusinessData = (data: BusinessData): void => {
   }
 }
 
-export const calculateInvestmentReturn = (investment: number, data: BusinessData): number => {
-  const projectedReturn = investment * (1 + data.investmentTerms.discountRate / 100) * 2
-  return Math.round(projectedReturn)
+export const calculateInvestmentReturn = (investment: number) => {
+  const returnRate = 0.2 // 20% return
+  const profit = investment * returnRate
+  const total = investment + profit
+  return {
+    investment,
+    profit: Math.round(profit),
+    totalReturn: Math.round(total),
+  }
+}
+
+
+export const resetToOriginalData = (password: string): boolean => {
+  const ADMIN_PASSWORD = "jkorm" // You can change this password
+
+  if (password !== ADMIN_PASSWORD) {
+    return false
+  }
+
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("starPopsData")
+  }
+  return true
+}
+
+export const getAvailableYears = (data: BusinessData): number[] => {
+  const years = data.financials.monthlyData.map((month) => month.year)
+  return [...new Set(years)].sort((a, b) => b - a) // Sort descending (newest first)
+}
+
+export const getMonthsForYear = (data: BusinessData, year: number): MonthlyData[] => {
+  return data.financials.monthlyData.filter((month) => month.year === year)
+}
+
+export const getNextAvailableMonth = (data: BusinessData): { month: string; year: number } => {
+  const currentDate = new Date()
+  const currentYear = currentDate.getFullYear()
+  const currentMonth = currentDate.getMonth() + 1 // 0-indexed to 1-indexed
+
+  // Get the latest entry
+  const sortedData = [...data.financials.monthlyData].sort((a, b) => {
+    if (a.year !== b.year) return b.year - a.year
+    return new Date(`${a.month} 1, ${a.year}`).getMonth() - new Date(`${b.month} 1, ${b.year}`).getMonth()
+  })
+
+  if (sortedData.length === 0) {
+    return { month: getMonthName(currentMonth), year: currentYear }
+  }
+
+  const latestEntry = sortedData[0]
+  const latestMonthIndex = getMonthIndex(latestEntry.month)
+
+  // Calculate next month
+  let nextMonth = latestMonthIndex + 1
+  let nextYear = latestEntry.year
+
+  if (nextMonth > 12) {
+    nextMonth = 1
+    nextYear += 1
+  }
+
+  return { month: getMonthName(nextMonth), year: nextYear }
+}
+
+const getMonthName = (monthIndex: number): string => {
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ]
+  return months[monthIndex - 1]
+}
+
+const getMonthIndex = (monthName: string): number => {
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ]
+  return months.indexOf(monthName) + 1
 }

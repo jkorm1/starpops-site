@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const navigationItems = [
   { name: "Home", href: "/" },
@@ -11,10 +11,10 @@ const navigationItems = [
   { name: "Our Pitch", href: "/pitch" },
   { name: "Invest", href: "/invest" },
   { name: "Contact", href: "/contact" },
-]
+];
 
 export function Navigation() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-border/20">
@@ -22,7 +22,15 @@ export function Navigation() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-full glow-border"></div>
+            <div className="">
+              <div className="w-8 h-8 bg-primary rounded-full glow-border mx-auto  flex items-center justify-center">
+                <img
+                  src="https://i.pinimg.com/736x/9d/71/fb/9d71fb1c7ab0c7915863908cfb62068a.jpg" // Replace with your actual image path
+                  alt="Profile"
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              </div>
+            </div>
             <span className="text-xl font-bold shimmer-text">Star Pops</span>
           </Link>
 
@@ -34,7 +42,9 @@ export function Navigation() {
                 href={item.href}
                 className={cn(
                   "text-sm font-medium transition-colors hover:text-primary",
-                  pathname === item.href ? "text-primary" : "text-muted-foreground",
+                  pathname === item.href
+                    ? "text-primary"
+                    : "text-muted-foreground"
                 )}
               >
                 {item.name}
@@ -43,16 +53,28 @@ export function Navigation() {
           </div>
 
           {/* CTA Button */}
-          <Button className="hidden md:inline-flex glow-border">Get Started</Button>
+          <Button className="hidden md:inline-flex glow-border">
+            Get Started
+          </Button>
 
           {/* Mobile Menu Button */}
           <Button variant="ghost" size="sm" className="md:hidden">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
             </svg>
           </Button>
         </div>
       </div>
     </nav>
-  )
+  );
 }
