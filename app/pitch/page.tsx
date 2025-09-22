@@ -579,12 +579,6 @@ export default function PitchPage() {
                 </div>
                 <div className="text-muted-foreground">Minimum Investment</div>
               </div>
-              <div>
-                <div className="text-4xl font-bold text-secondary mb-2">
-                  {businessData.investmentTerms.discountRate}%
-                </div>
-                <div className="text-muted-foreground">Discount Rate</div>
-              </div>
             </div>
           </Card>
         </div>
@@ -647,19 +641,6 @@ export default function PitchPage() {
                     <span className="text-secondary font-bold">
                       GHS{" "}
                       {businessData.investmentTerms.minimumInvestment.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-4 bg-primary/10 rounded-lg">
-                    <span className="font-medium">Valuation Cap</span>
-                    <span className="text-primary font-bold">
-                      GHS{" "}
-                      {businessData.investmentTerms.valuationCap.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-4 bg-secondary/10 rounded-lg">
-                    <span className="font-medium">Discount Rate</span>
-                    <span className="text-secondary font-bold">
-                      {businessData.investmentTerms.discountRate}%
                     </span>
                   </div>
                 </div>

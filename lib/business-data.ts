@@ -60,10 +60,12 @@ export interface BusinessData {
   }
   investmentTerms: {
     minimumInvestment: number
-    valuationCap: number
-    discountRate: number
+    profitRate: number
+    durationYears: number
+    payoutFrequency: string
     fullTerms: string
   }
+
 }
 
 // Default business data based on the Excel sheet
@@ -159,11 +161,20 @@ export const defaultBusinessData: BusinessData = {
   },
   investmentTerms: {
     minimumInvestment: 1000,
-    valuationCap: 500000,
-    discountRate: 20,
-    fullTerms:
-      "Investment terms include 20% discount rate on future equity rounds, minimum investment of GHS 5,000, and participation in our growth journey to become Ghana's premier campus food brand.",
+    profitRate: 0.20, // 20%
+    durationYears: 2,
+    payoutFrequency: "Quarterly",
+    fullTerms: `
+      Star Pops Investment Terms:
+      1. The minimum amount that can be invested is GHS 1,000.
+      2. Every investor receives 20% profit on the amount invested.
+      3. The full investment plus profit will be paid back within 2 years.
+      4. Payments are released every 3 months (quarterly) until the full amount is cleared.
+      5. Once the full amount is paid, the investor is completely detached from the business, with no further claims or obligations.
+    `,
   },
+
+  
 }
 
 // Data management functions
@@ -188,15 +199,26 @@ export const saveBusinessData = (data: BusinessData): void => {
 }
 
 export const calculateInvestmentReturn = (investment: number) => {
-  const returnRate = 0.2 // 20% return
+  const returnRate = 0.2 // 20% total profit after 2 years
   const profit = investment * returnRate
   const total = investment + profit
+
+  const quarters = 8 // 2 years = 8 quarters (every 3 months)
+  const paymentPerQuarter = total / quarters
+
   return {
     investment,
     profit: Math.round(profit),
     totalReturn: Math.round(total),
+    quarters,
+    paymentPerQuarter: Math.round(paymentPerQuarter),
+    paymentSchedule: Array.from({ length: quarters }, (_, i) => ({
+      quarter: i + 1,
+      amount: Math.round(paymentPerQuarter),
+    })),
   }
 }
+
 
 
 export const resetToOriginalData = (password: string): boolean => {

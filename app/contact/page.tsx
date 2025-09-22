@@ -54,7 +54,7 @@ export default function ContactPage() {
     toast({
       title: "Feature Not Available Yet",
       description:
-        "Please send your message directly to info@starpops.com. We'll respond within 24 hours.",
+        "Please send your message directly to starpops001@gmail.com. We'll respond within 24 hours.",
       variant: "destructive",
     });
   };
@@ -97,7 +97,7 @@ export default function ContactPage() {
                 <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
                   <div className="text-center">
                     <div className="text-lg font-bold text-primary mb-1">
-                      info@starpops.com
+                      starpops001@gmail.comm
                     </div>
                     <div className="text-sm text-muted-foreground">
                       We respond within 24 hours
@@ -214,14 +214,14 @@ export default function ContactPage() {
                   ) : (
                     <>
                       <Mail className="w-5 h-5 mr-2" />
-                      Copy & Send to info@starpops.com
+                      Copy & Send to starpops001@gmial.com
                     </>
                   )}
                 </Button>
 
                 <div className="text-sm text-muted-foreground text-center">
                   Click the button above to be reminded to send your message to
-                  info@starpops.com
+                  starpops001@gmail.com
                 </div>
               </form>
             </CardContent>
@@ -244,7 +244,9 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold mb-1">Email</h3>
-                    <p className="text-muted-foreground">info@starpops.com</p>
+                    <p className="text-muted-foreground">
+                      starpops001@gmail.com
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       For general inquiries and support
                     </p>
@@ -257,9 +259,9 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold mb-1">Phone</h3>
-                    <p className="text-muted-foreground">+233 XX XXX XXXX</p>
+                    <p className="text-muted-foreground">+233 53 365 2730</p>
                     <p className="text-sm text-muted-foreground">
-                      Available Mon-Fri, 9AM-6PM GMT
+                      Available Mon-Sat, 6PM-12AM GMT
                     </p>
                   </div>
                 </div>
@@ -282,10 +284,7 @@ export default function ContactPage() {
                   <div>
                     <h3 className="font-semibold mb-1">Business Hours</h3>
                     <p className="text-muted-foreground">
-                      Monday - Friday: 8AM - 6PM
-                    </p>
-                    <p className="text-muted-foreground">
-                      Saturday: 10AM - 4PM
+                      Monday - Saturday: 6PM - 12AM
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Closed on Sundays

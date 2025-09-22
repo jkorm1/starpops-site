@@ -143,7 +143,7 @@ export default function HomePage() {
               <CardContent className="p-0">
                 <div className="aspect-square bg-gradient-to-br from-primary/20 to-secondary/20 rounded-t-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                   <Image
-                    src="https://i.pinimg.com/736x/ad/92/71/ad927162a17f2ab283cf86832bcbafcd.jpg"
+                    src="/star.jpg"
                     alt="Premium Popcorn Cup"
                     width={300}
                     height={300}
@@ -162,7 +162,7 @@ export default function HomePage() {
               <CardContent className="p-0">
                 <div className="aspect-square bg-gradient-to-br from-secondary/20 to-primary/20 rounded-t-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                   <Image
-                    src="/gourmet-popcorn-bag-with-premium-packaging.jpg"
+                    src="/packaged.jpg"
                     alt="Premium Popcorn Bag"
                     width={300}
                     height={300}

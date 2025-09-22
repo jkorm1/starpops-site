@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { jsPDF } from "jspdf";
 import {
   Dialog,
   DialogContent,
@@ -31,13 +32,14 @@ import {
 export default function InvestPage() {
   const [businessData, setBusinessData] = useState<BusinessData | null>(null);
   const [investmentAmount, setInvestmentAmount] = useState<string>("");
-  const [investorName, setInvestorName] = useState<string>("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [investorEmail, setInvestorEmail] = useState<string>("");
-  const [investorMessage, setInvestorMessage] = useState<string>("");
   const [calculatedReturn, setCalculatedReturn] = useState<number | null>(null);
   const [calculatedProfit, setCalculatedProfit] = useState<number | null>(null);
-
   const [isLoading, setIsLoading] = useState(true);
+
+  const [previewPDF, setPreviewPDF] = useState<jsPDF | null>(null);
 
   useEffect(() => {
     const data = getBusinessData();
@@ -68,66 +70,121 @@ export default function InvestPage() {
       return;
     }
 
-    const { profit, totalReturn } = calculateInvestmentReturn(amount);
-    setCalculatedReturn(totalReturn);
-    setCalculatedProfit(profit);
+    const result = calculateInvestmentReturn(amount);
+    setCalculatedReturn(result.totalReturn);
+    setCalculatedProfit(result.profit);
+
+    // Optional: If you want to show quarterly breakdown
+    console.log("Quarterly Payments:", result.paymentSchedule);
   };
 
-  const handleGenerateProposal = () => {
-    if (!businessData || !investmentAmount || !investorName || !investorEmail) {
-      toast({
-        title: "Missing Information",
-        description:
-          "Please fill in all required fields to generate the proposal.",
-        variant: "destructive",
-      });
-      return;
+  const generateProposalPDF = () => {
+    if (!businessData) return null;
+
+    const doc = new jsPDF();
+    let y = 20;
+
+    // Header
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Star Pops Investment Proposal", 14, y);
+    y += 10;
+
+    // Date
+    doc.setFontSize(12);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, y);
+    y += 10;
+
+    // Investor Details
+    doc.setFont("helvetica", "bold");
+    doc.text("Investor Details:", 14, y);
+    y += 8;
+    doc.setFont("helvetica", "normal");
+    doc.text(`First Name: ${firstName}`, 14, y);
+    y += 6;
+    doc.text(`Last Name: ${lastName}`, 14, y);
+    y += 6;
+    doc.text(`Email: ${investorEmail}`, 14, y);
+    y += 6;
+
+    // Investment Summary
+    y += 4;
+    doc.setFont("helvetica", "bold");
+    doc.text("Investment Summary:", 14, y);
+    y += 8;
+    doc.setFont("helvetica", "normal");
+    const amount = parseFloat(investmentAmount);
+    doc.text(`Investment Amount: GHS ${amount.toLocaleString()}`, 14, y);
+    y += 6;
+    if (calculatedReturn !== null) {
+      doc.text(
+        `Expected Profit: GHS ${calculatedProfit?.toLocaleString()}`,
+        14,
+        y
+      );
+      y += 6;
+      doc.text(
+        `Total Return: GHS ${calculatedReturn?.toLocaleString()}`,
+        14,
+        y
+      );
+      y += 6;
     }
 
-    // In a real app, this would generate a PDF using jsPDF
-    const proposalData = {
-      investor: {
-        name: investorName,
-        email: investorEmail,
-        message: investorMessage,
-      },
-      investment: {
-        amount: Number.parseFloat(investmentAmount),
-        expectedReturn: calculatedReturn,
-      },
-      business: businessData,
-      timestamp: new Date().toISOString(),
-    };
-
-    // Simulate PDF generation
-    const blob = new Blob([JSON.stringify(proposalData, null, 2)], {
-      type: "application/json",
+    // Investment Terms
+    y += 4;
+    doc.setFont("helvetica", "bold");
+    doc.text("Investment Terms:", 14, y);
+    y += 8;
+    doc.setFont("helvetica", "normal");
+    businessData.investmentTerms.fullTerms.split("\n").forEach((line) => {
+      if (line.trim() !== "") {
+        doc.text(line, 14, y);
+        y += 6;
+        if (y > 270) {
+          // page break
+          doc.addPage();
+          y = 20;
+        }
+      }
     });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `star-pops-investment-proposal-${investorName
-      .replace(/\s+/g, "-")
-      .toLowerCase()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
 
-    toast({
-      title: "Proposal Generated",
-      description:
-        "Your investment proposal has been downloaded. Please email it to us for review.",
-    });
+    // Footer
+    y += 10;
+    doc.setFont("helvetica", "italic");
+    doc.text(
+      "Please email this proposal to starpops001@gmail.com for review.  Once approved, an account will be set up for your investment.",
+      14,
+      y
+    );
+
+    return doc;
+  };
+
+  const handlePreviewProposal = () => {
+    const pdf = generateProposalPDF();
+    if (pdf) setPreviewPDF(pdf);
+  };
+
+  const handleDownloadProposal = () => {
+    if (previewPDF) {
+      previewPDF.save(
+        `star-pops-investment-proposal-${firstName.toLowerCase()}-${lastName.toLowerCase()}.pdf`
+      );
+      toast({
+        title: "Proposal Downloaded",
+        description:
+          "Please email this PDF to starpops@example.com for review.",
+      });
+    }
   };
 
   if (isLoading || !businessData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading investment portal...</p>
-        </div>
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-lg text-muted-foreground">
+          Loading investment data...
+        </p>
       </div>
     );
   }
@@ -277,18 +334,26 @@ export default function InvestPage() {
                 </h4>
                 <ul className="text-sm text-muted-foreground space-y-1">
                   <li>
-                    • {businessData.investmentTerms.discountRate}% discount rate
-                    on future equity rounds
-                  </li>
-                  <li>
-                    • Valuation cap: GHS{" "}
-                    {businessData.investmentTerms.valuationCap.toLocaleString()}
-                  </li>
-                  <li>
                     • Minimum investment: GHS{" "}
                     {businessData.investmentTerms.minimumInvestment.toLocaleString()}
                   </li>
-                  <li>• Convertible note structure</li>
+                  <li>
+                    • Investors receive{" "}
+                    {Math.round(businessData.investmentTerms.profitRate * 100)}%
+                    profit on their investment
+                  </li>
+                  <li>
+                    • Full repayment completed within{" "}
+                    {businessData.investmentTerms.durationYears} years
+                  </li>
+                  <li>
+                    • Payments released{" "}
+                    {businessData.investmentTerms.payoutFrequency.toLowerCase()}{" "}
+                    (every 3 months)
+                  </li>
+                  <li>
+                    • Once fully paid, investor is detached from the business
+                  </li>
                 </ul>
               </div>
             </CardContent>
@@ -309,12 +374,22 @@ export default function InvestPage() {
             <CardContent className="space-y-6">
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="investor-name">Full Name *</Label>
+                  <Label htmlFor="first-name">First Name *</Label>
                   <Input
-                    id="investor-name"
-                    placeholder="Your full name"
-                    value={investorName}
-                    onChange={(e) => setInvestorName(e.target.value)}
+                    id="first-name"
+                    placeholder="First Name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="bg-input/50 border-secondary/30"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="last-name">Last Name *</Label>
+                  <Input
+                    id="last-name"
+                    placeholder="Last Name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
                     className="bg-input/50 border-secondary/30"
                   />
                 </div>
@@ -329,17 +404,6 @@ export default function InvestPage() {
                     className="bg-input/50 border-secondary/30"
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="investor-message">Message (Optional)</Label>
-                <Textarea
-                  id="investor-message"
-                  placeholder="Tell us about your investment goals and any questions you have..."
-                  value={investorMessage}
-                  onChange={(e) => setInvestorMessage(e.target.value)}
-                  className="bg-input/50 border-secondary/30 min-h-[100px]"
-                />
               </div>
 
               <div className="space-y-4">
@@ -371,31 +435,26 @@ export default function InvestPage() {
                             Minimum investment: GHS{" "}
                             {businessData.investmentTerms.minimumInvestment.toLocaleString()}
                           </li>
-                          <li>
-                            Valuation cap: GHS{" "}
-                            {businessData.investmentTerms.valuationCap.toLocaleString()}
-                          </li>
-                          <li>
-                            Discount rate:{" "}
-                            {businessData.investmentTerms.discountRate}% on
-                            future equity rounds
-                          </li>
-                          <li>Instrument: Convertible note (SAFE structure)</li>
-                        </ul>
-                      </div>
 
-                      {/* Conversion Mechanics */}
-                      <div className="p-4 bg-secondary/10 rounded-lg">
-                        <h4 className="font-semibold mb-2">
-                          Conversion Mechanics
-                        </h4>
-                        <p>
-                          Your investment will convert into equity during our
-                          next qualified funding round, based on the valuation
-                          cap and discount rate above. If no round occurs within
-                          24 months, you may opt for conversion at a mutually
-                          agreed valuation or extend the note.
-                        </p>
+                          <li>
+                            Investors receive{" "}
+                            {businessData.investmentTerms.profitRate * 100}%
+                            profit on their investment
+                          </li>
+                          <li>
+                            Payments released{" "}
+                            {businessData.investmentTerms.payoutFrequency.toLowerCase()}{" "}
+                            (every 3 months)
+                          </li>
+                          <li>
+                            Full repayment completed within{" "}
+                            {businessData.investmentTerms.durationYears} years
+                          </li>
+                          <li>
+                            Once fully paid, investor is detached from the
+                            business
+                          </li>
+                        </ul>
                       </div>
 
                       {/* Financial Highlights */}
@@ -475,15 +534,18 @@ export default function InvestPage() {
                         <h4 className="font-semibold mb-2">Investor Rights</h4>
                         <ul className="space-y-1 list-disc list-inside">
                           <li>
-                            Right to convert investment into equity at next
-                            funding round
+                            Right to participate in future funding rounds
+                            through a convertible note/SAFE
                           </li>
                           <li>Access to quarterly financial updates</li>
                           <li>
-                            Priority invitation to shareholder meetings and
+                            Priority invitation to business review meetings and
                             product launches
                           </li>
-                          <li>No voting rights unless converted to equity</li>
+                          <li>
+                            No voting rights unless investment converts in the
+                            future
+                          </li>
                         </ul>
                       </div>
 
@@ -494,10 +556,13 @@ export default function InvestPage() {
                         </h4>
                         <p>
                           All investments carry risk. Star Pops operates in a
-                          seasonal and competitive market. While projections are
-                          based on current performance and growth plans, future
-                          results may vary. Investors should consider their risk
-                          tolerance before committing funds.
+                          seasonal and competitive food market. Key risks
+                          include changes in student population, raw material
+                          price fluctuations, and competition from other food
+                          vendors. While projections are based on strong initial
+                          performance, actual future results may vary. Investors
+                          should carefully consider their risk tolerance before
+                          committing funds.
                         </p>
                       </div>
 
@@ -505,27 +570,52 @@ export default function InvestPage() {
                       <div className="p-4 bg-muted/20 rounded-lg border border-border/30">
                         <h4 className="font-semibold mb-2">Legal Disclaimer</h4>
                         <p>
-                          This overview is for informational purposes only and
-                          does not constitute a legally binding investment
-                          agreement. Final terms will be outlined in a formal
-                          convertible note or SAFE agreement. By investing, you
-                          acknowledge and accept the terms and risks described
-                          above.
+                          This document is for informational purposes only and
+                          does not constitute a legally binding agreement. Final
+                          investment terms, repayment schedules, and any
+                          optional SAFE arrangements will be outlined in a
+                          separate signed contract. By expressing interest, you
+                          acknowledge the risks described above and agree that
+                          this proposal alone does not represent a binding
+                          commitment to invest.
                         </p>
                       </div>
                     </div>
                   </DialogContent>
                 </Dialog>
-                <Button
-                  onClick={handleGenerateProposal}
-                  className="w-full glow-border text-lg py-4"
-                  disabled={
-                    !investmentAmount || !investorName || !investorEmail
-                  }
-                >
-                  <Download className="w-5 h-5 mr-2" />
-                  Generate Investment Proposal
-                </Button>
+
+                <div className="flex flex-col md:flex-row gap-4 mt-4">
+                  <Button
+                    onClick={handlePreviewProposal}
+                    className="w-full md:w-1/2 glow-border text-lg py-4"
+                    disabled={
+                      !investmentAmount ||
+                      !firstName ||
+                      !lastName ||
+                      !investorEmail
+                    }
+                  >
+                    Preview Proposal
+                  </Button>
+
+                  <Button
+                    onClick={handleDownloadProposal}
+                    className="w-full md:w-1/2 glow-border text-lg py-4"
+                    disabled={!previewPDF}
+                  >
+                    Download Proposal
+                  </Button>
+                </div>
+
+                {previewPDF && (
+                  <div className="mt-6 border rounded-lg overflow-hidden h-[600px]">
+                    <iframe
+                      src={previewPDF.output("datauristring")}
+                      width="100%"
+                      height="100%"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="text-sm text-muted-foreground">
