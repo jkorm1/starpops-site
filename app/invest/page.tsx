@@ -47,13 +47,10 @@ export default function InvestPage() {
     setIsLoading(false);
   }, []);
 
-  const handleCalculateReturn = () => {
+  useEffect(() => {
     if (!businessData || !investmentAmount) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter an investment amount to calculate returns.",
-        variant: "destructive",
-      });
+      setCalculatedReturn(null);
+      setCalculatedProfit(null);
       return;
     }
 
@@ -62,11 +59,8 @@ export default function InvestPage() {
       isNaN(amount) ||
       amount < businessData.investmentTerms.minimumInvestment
     ) {
-      toast({
-        title: "Invalid Amount",
-        description: `Minimum investment is GHS ${businessData.investmentTerms.minimumInvestment.toLocaleString()}.`,
-        variant: "destructive",
-      });
+      setCalculatedReturn(null);
+      setCalculatedProfit(null);
       return;
     }
 
@@ -74,89 +68,106 @@ export default function InvestPage() {
     setCalculatedReturn(result.totalReturn);
     setCalculatedProfit(result.profit);
 
-    // Optional: If you want to show quarterly breakdown
+    // Optional: For debugging quarterly breakdown
     console.log("Quarterly Payments:", result.paymentSchedule);
-  };
+  }, [investmentAmount, businessData]);
 
   const generateProposalPDF = () => {
     if (!businessData) return null;
 
     const doc = new jsPDF();
+    const pageWidth = 210; // A4 width in mm
+    const pageMargin = 14; // left/right margin
+    const textMaxWidth = pageWidth - pageMargin * 2;
+
     let y = 20;
 
-    // Header
-    doc.setFontSize(18);
+    // --- Header ---
+    doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("Star Pops Investment Proposal", 14, y);
-    y += 10;
+    doc.text("Star Pops Investment Proposal", pageMargin, y);
+    y += 12;
 
-    // Date
+    // --- Date ---
     doc.setFontSize(12);
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, pageMargin, y);
     y += 10;
 
-    // Investor Details
+    // --- Investor Details ---
     doc.setFont("helvetica", "bold");
-    doc.text("Investor Details:", 14, y);
+    doc.text("Investor Details:", pageMargin, y);
     y += 8;
-    doc.setFont("helvetica", "normal");
-    doc.text(`First Name: ${firstName}`, 14, y);
-    y += 6;
-    doc.text(`Last Name: ${lastName}`, 14, y);
-    y += 6;
-    doc.text(`Email: ${investorEmail}`, 14, y);
-    y += 6;
 
-    // Investment Summary
+    doc.setFont("helvetica", "normal");
+    const investorLines = [
+      `First Name: ${firstName}`,
+      `Last Name: ${lastName}`,
+      `Email: ${investorEmail}`,
+    ];
+    investorLines.forEach((line) => {
+      doc.text(line, pageMargin, y);
+      y += 6;
+    });
     y += 4;
+
+    // --- Investment Summary ---
     doc.setFont("helvetica", "bold");
-    doc.text("Investment Summary:", 14, y);
+    doc.text("Investment Summary:", pageMargin, y);
     y += 8;
+
     doc.setFont("helvetica", "normal");
     const amount = parseFloat(investmentAmount);
-    doc.text(`Investment Amount: GHS ${amount.toLocaleString()}`, 14, y);
-    y += 6;
-    if (calculatedReturn !== null) {
-      doc.text(
-        `Expected Profit: GHS ${calculatedProfit?.toLocaleString()}`,
-        14,
-        y
+    const summaryLines = [`Investment Amount: GHS ${amount.toLocaleString()}`];
+
+    if (calculatedReturn !== null && calculatedProfit !== null) {
+      summaryLines.push(
+        `Expected Profit: GHS ${calculatedProfit.toLocaleString()}`,
+        `Total Return: GHS ${calculatedReturn.toLocaleString()}`
       );
-      y += 6;
-      doc.text(
-        `Total Return: GHS ${calculatedReturn?.toLocaleString()}`,
-        14,
-        y
-      );
-      y += 6;
     }
 
-    // Investment Terms
-    y += 4;
-    doc.setFont("helvetica", "bold");
-    doc.text("Investment Terms:", 14, y);
-    y += 8;
-    doc.setFont("helvetica", "normal");
-    businessData.investmentTerms.fullTerms.split("\n").forEach((line) => {
-      if (line.trim() !== "") {
-        doc.text(line, 14, y);
-        y += 6;
-        if (y > 270) {
-          // page break
-          doc.addPage();
-          y = 20;
-        }
-      }
+    summaryLines.forEach((line) => {
+      doc.text(line, pageMargin, y);
+      y += 6;
     });
+    y += 4;
 
-    // Footer
-    y += 10;
-    doc.setFont("helvetica", "italic");
-    doc.text(
-      "Please email this proposal to starpops001@gmail.com for review.  Once approved, an account will be set up for your investment.",
-      14,
-      y
+    // --- Investment Terms ---
+    doc.setFont("helvetica", "bold");
+    doc.text("Investment Terms:", pageMargin, y);
+    y += 8;
+
+    doc.setFont("helvetica", "normal");
+    const termsLines = doc.splitTextToSize(
+      businessData.investmentTerms.fullTerms,
+      textMaxWidth
     );
+    termsLines.forEach((line) => {
+      if (y > 270) {
+        // page break
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(line, pageMargin, y);
+      y += 6;
+    });
+    y += 10;
+
+    // --- Footer ---
+    const footerText =
+      "Please email this proposal to starpops001@gmail.com for review. Once approved, an account will be set up for your investment.";
+    const wrappedFooter = doc.splitTextToSize(footerText, textMaxWidth);
+
+    wrappedFooter.forEach((line, i) => {
+      if (y > 270) {
+        // page break
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFont("helvetica", "italic");
+      doc.text(line, pageMargin, y + i * 6);
+    });
 
     return doc;
   };
@@ -174,7 +185,7 @@ export default function InvestPage() {
       toast({
         title: "Proposal Downloaded",
         description:
-          "Please email this PDF to starpops@example.com for review.",
+          "Please email this PDF to starpops001@gmail.com for review.",
       });
     }
   };
@@ -277,7 +288,6 @@ export default function InvestPage() {
               </div>
 
               <Button
-                onClick={handleCalculateReturn}
                 className="w-full glow-border text-lg py-4"
                 disabled={!investmentAmount}
               >

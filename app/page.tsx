@@ -35,13 +35,10 @@ export default function HomePage() {
     setBusinessData(getBusinessData());
   }, []);
 
-  const handleInvestmentCalculation = () => {
+  useEffect(() => {
     if (!businessData || !investmentAmount) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter an investment amount to calculate returns.",
-        variant: "destructive",
-      });
+      setCalculatedReturn(null);
+      setCalculatedProfit(null);
       return;
     }
 
@@ -50,18 +47,15 @@ export default function HomePage() {
       isNaN(amount) ||
       amount < businessData.investmentTerms.minimumInvestment
     ) {
-      toast({
-        title: "Invalid Amount",
-        description: `Minimum investment is GHS ${businessData.investmentTerms.minimumInvestment.toLocaleString()}.`,
-        variant: "destructive",
-      });
+      setCalculatedReturn(null);
+      setCalculatedProfit(null);
       return;
     }
 
     const { profit, totalReturn } = calculateInvestmentReturn(amount);
     setCalculatedReturn(totalReturn);
     setCalculatedProfit(profit);
-  };
+  }, [investmentAmount, businessData]);
 
   if (!businessData) {
     return (
@@ -381,7 +375,6 @@ export default function HomePage() {
               </div>
 
               <Button
-                onClick={handleInvestmentCalculation}
                 className="w-full glow-border text-lg py-4"
                 disabled={!investmentAmount}
               >
