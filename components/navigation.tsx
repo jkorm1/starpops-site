@@ -53,9 +53,11 @@ export function Navigation() {
           </div>
 
           {/* CTA Button */}
-          <Button className="hidden md:inline-flex glow-border">
-            Get Started
-          </Button>
+          <Link href="/" className="flex items-center space-x-2">
+            <Button className="hidden md:inline-flex glow-border">
+              Get Started
+            </Button>
+          </Link>
 
           {/* Mobile Menu Button */}
           <Button variant="ghost" size="sm" className="md:hidden">
