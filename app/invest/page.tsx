@@ -79,7 +79,6 @@ export default function InvestPage() {
     const pageWidth = 210; // A4 width in mm
     const pageMargin = 14; // left/right margin
     const textMaxWidth = pageWidth - pageMargin * 2;
-
     let y = 20;
 
     // --- Header ---
@@ -131,7 +130,36 @@ export default function InvestPage() {
       doc.text(line, pageMargin, y);
       y += 6;
     });
-    y += 4;
+    y += 6;
+
+    // --- Quarterly Payout Schedule ---
+    const result = calculateInvestmentReturn(amount);
+    if (result.paymentSchedule && result.paymentSchedule.length > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.text("Quarterly Payout Schedule:", pageMargin, y);
+      y += 8;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+
+      // Table header
+      doc.text("Quarter", pageMargin, y);
+      doc.text("Amount (GHS)", pageMargin + 60, y);
+      y += 6;
+
+      result.paymentSchedule.forEach((payment, index) => {
+        if (y > 270) {
+          // page break
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(`Q${index + 1}`, pageMargin, y);
+        doc.text(`${payment.amount.toLocaleString()}`, pageMargin + 60, y);
+        y += 6;
+      });
+
+      y += 4;
+    }
 
     // --- Investment Terms ---
     doc.setFont("helvetica", "bold");
@@ -145,7 +173,6 @@ export default function InvestPage() {
     );
     termsLines.forEach((line) => {
       if (y > 270) {
-        // page break
         doc.addPage();
         y = 20;
       }
@@ -155,19 +182,39 @@ export default function InvestPage() {
     y += 10;
 
     // --- Footer ---
-    const footerText =
-      "Please email this proposal to starpops001@gmail.com for review. Once approved, an account will be set up for your investment.";
-    const wrappedFooter = doc.splitTextToSize(footerText, textMaxWidth);
+    const footerTextBefore = "Please email this proposal to ";
+    const footerEmail = "starpops001@gmail.com";
+    const footerTextAfter =
+      " for review. Once approved, an account will be set up for your investment.";
 
-    wrappedFooter.forEach((line, i) => {
+    const wrappedBefore = doc.splitTextToSize(footerTextBefore, textMaxWidth);
+    const wrappedAfter = doc.splitTextToSize(footerTextAfter, textMaxWidth);
+
+    wrappedBefore.forEach((line, i) => {
       if (y > 270) {
-        // page break
         doc.addPage();
         y = 20;
       }
       doc.setFont("helvetica", "italic");
       doc.text(line, pageMargin, y + i * 6);
     });
+    y += wrappedBefore.length * 6;
+
+    // Email in bold
+    doc.setFont("helvetica", "bold");
+    doc.text(footerEmail, pageMargin, y);
+    y += 6;
+
+    // Rest of the text
+    wrappedAfter.forEach((line, i) => {
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFont("helvetica", "italic");
+      doc.text(line, pageMargin, y + i * 6);
+    });
+    y += wrappedAfter.length * 6;
 
     return doc;
   };
