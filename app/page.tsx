@@ -181,7 +181,7 @@ export default function HomePage() {
               <CardContent className="p-0">
                 <div className="aspect-square bg-gradient-to-br from-primary/20 to-secondary/20 rounded-t-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                   <Image
-                    src="/gourmet-popcorn-bag-with-premium-packaging.jpg"
+                    src="/artisanal-popcorn-with-toppings-close-up.jpg"
                     alt="Artisanal Popcorn"
                     width={300}
                     height={300}
