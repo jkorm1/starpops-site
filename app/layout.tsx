@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   description:
     "KNUST's Premier Popcorn Experience - Investment & Business Portal",
   generator: "",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
